@@ -1,0 +1,21 @@
+# Web UI
+streamlit
+
+# グラフ描画（ダッシュボードや推移分析）
+plotly
+
+# データ処理
+pandas
+python-dateutil
+
+# Supabase（DB & 認証）
+supabase
+
+# Supabase Auth + localStorage連携
+streamlit-javascript
+
+# AgGrid（テーブル表示・編集）
+streamlit-aggrid
+
+# .envファイルの読み込み（環境変数管理）
+python-dotenv
