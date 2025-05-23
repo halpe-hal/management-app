@@ -89,7 +89,7 @@ def show_dashboard():
         u8 = sales_dict.get((year, month, "売上8%"), 0)
         o10 = sales_dict.get((year, month, "その他売上10%"), 0)
         o8 = sales_dict.get((year, month, "その他売上8%"), 0)
-        原価 = expense_dict.get((year, month, "原価"), 0)
+        原価 = expense_dict.get((year, month, "原価（仕入れ高）"), 0)
         人件費 = expense_dict.get((year, month, "人件費"), 0)
         水道光熱費 = expense_dict.get((year, month, "水道光熱費"), 0)
         消耗品 = expense_dict.get((year, month, "消耗品費・その他諸経費"), 0)
