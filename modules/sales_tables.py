@@ -37,7 +37,7 @@ def show_sales_table(year: int, month: int, top_category: str):
             "入金済額": row.get("received_amount", 0),
             "入金手段": row.get("payment", ""),
             "請求書": row.get("invoice_issued", False),
-            "税区分": row.get("tax_rate", "売上10%"),
+            "税区分": row.get("tax_rate", ""),
             "操作": "（なし）"
         }
         for row in existing
