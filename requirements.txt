@@ -1,5 +1,5 @@
 # Web UI
-streamlit
+streamlit==1.44.1
 
 # グラフ描画（ダッシュボードや推移分析）
 plotly
