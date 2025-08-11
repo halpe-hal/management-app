@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(page_title="管理会計", layout="wide")
 
 from auth import check_login, logout
-from modules import dashboard, monthly_io, header
+from modules import dashboard, monthly_io, header, dashboard_excluding_tax
 
 # --- セッション初期化 ---
 if "menu" not in st.session_state:
@@ -19,7 +19,7 @@ header.show()
 # --- サイドバー ---
 with st.sidebar:
     st.markdown("<h4>メニューを選択</h4>", unsafe_allow_html=True)
-    menus = ["ダッシュボード", "グラフ分析", "月別入出金管理", "固定費管理", "設定"]
+    menus = ["ダッシュボード", "【税抜】ダッシュボード", "グラフ分析", "月別入出金管理", "固定費管理", "設定"]
 
     for menu_item in menus:
         if st.button(menu_item, key=f"menu_{menu_item}"):
@@ -32,6 +32,8 @@ with st.sidebar:
 # --- メインコンテンツ切替 ---
 if st.session_state["menu"] == "ダッシュボード":
     dashboard.show_dashboard()
+elif st.session_state["menu"] == "【税抜】ダッシュボード":
+    dashboard_excluding_tax.show_dashboard_excluding_tax()
 elif st.session_state["menu"] == "グラフ分析":
     from modules.graph_analysis import show_graph_analysis
     show_graph_analysis()
