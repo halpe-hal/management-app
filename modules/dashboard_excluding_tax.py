@@ -160,6 +160,7 @@ def show_dashboard_excluding_tax():
     df = insert_after(df, "消耗品費・その他諸経費", "消耗品・その他諸経費率", pct_row(df.loc["消耗品費・その他諸経費"]))
     df = insert_after(df, "その他固定費", "その他固定費率", pct_row(df.loc["その他固定費"]))
     df = insert_after(df, "家賃", "家賃率", pct_row(df.loc["家賃"]))
+    df = insert_after(df, "家賃率", "FLR比率", pct_row(df.loc["原価"] + df.loc["人件費"]+ df.loc["家賃"]))
     df = insert_after(df, "営業利益", "営業利益率", pct_row(df.loc["営業利益"]))
 
     # --- 表示用変換 ---
@@ -193,6 +194,7 @@ def show_dashboard_excluding_tax():
         "消耗品・その他諸経費率": target["misc_rate"],
         "その他固定費率": target["other_fixed_rate"],
         "家賃率": target["rent_rate"],
+        "FLR比率": target["flr_rate"],
         "営業利益率": target["op_profit_rate"]
     }
 
