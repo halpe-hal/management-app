@@ -55,6 +55,7 @@ def handle_expense_targets_setting():
                         <tr><td>水道光熱費率</td><td>{data.get("utility_rate", 0)}</td></tr>
                         <tr><td>その他固定費率</td><td>{data.get("other_fixed_rate", 0)}</td></tr>
                         <tr><td>家賃率</td><td>{data.get("rent_rate", 0)}</td></tr>
+                        <tr><td>FLR率</td><td>{data.get("flr_rate", 0)}</td></tr>
                         <tr><td>営業利益率</td><td>{data.get("op_profit_rate", 0)}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
@@ -78,6 +79,7 @@ def handle_expense_targets_setting():
                     utility_rate = st.number_input("水道光熱費率", value=float(data.get("utility_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_utility")
                     other_fixed_rate = st.number_input("その他固定費率", value=float(data.get("other_fixed_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_other_fixed")
                     rent_rate = st.number_input("家賃率", value=float(data.get("rent_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_rent")
+                    flr_rate = st.number_input("FLR率", value=float(data.get("flr_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_flr")
                     op_profit_rate = st.number_input("営業利益率", value=float(data.get("op_profit_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_op")
                 if st.button("保存", key=f"save_btn_{div}"):
                     payload = {
@@ -89,6 +91,7 @@ def handle_expense_targets_setting():
                         "utility_rate": utility_rate,
                         "other_fixed_rate": other_fixed_rate,
                         "rent_rate": rent_rate,
+                        "flr_rate": flr_rate,
                         "op_profit_rate": op_profit_rate
                     }
                     success = upsert_expense_target(payload)
