@@ -171,7 +171,7 @@ def render_pl_table(df: pd.DataFrame, targets: dict = {}):
         if row_label in ["総売上", "営業利益", "営業利益率"]:
             return "blue-bg bold"
         elif row_label in ["原価率", "人件費率", "FL比率", "水道光熱費率",
-                           "消耗品費率", "その他固定費率", "家賃率"]:
+                           "消耗品・その他諸経費率", "その他固定費率", "家賃率", "FLR比率"]:
             return "red-bg bold"
         else:
             return ""
