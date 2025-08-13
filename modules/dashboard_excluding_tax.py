@@ -78,8 +78,8 @@ def show_dashboard_excluding_tax():
     # --- PL構築 ---
     pl_dict = {
         "売上（税率10%）": {}, "売上（税率8%）": {}, "その他売上（税率10%）": {}, "その他売上（税率8%）": {},
-        "総売上": {}, "原価": {}, "売上総利益": {}, "人件費": {}, "水道光熱費": {}, "消耗品費・その他諸経費": {}, "臨時諸経費": {},
-        "その他固定費": {}, "家賃": {}, "広告費": {}, "融資返済利息": {}, "営業利益": {},
+        "総売上": {}, "原価": {}, "売上総利益": {}, "人件費": {}, "水道光熱費": {}, "消耗品費・その他諸経費": {},
+        "その他固定費": {}, "家賃": {}, "広告費": {}, "融資返済利息": {}, "実質営業利益": {}, "臨時諸経費": {}, "最終営業利益": {},
          "法人税額": {}, "融資返済元金": {}, "内部留保": {}
     }
 
@@ -93,21 +93,22 @@ def show_dashboard_excluding_tax():
         人件費 = expense_dict.get((year, month, "人件費"), 0)
         水道光熱費 = expense_dict.get((year, month, "水道光熱費"), 0) / 1.1
         消耗品 = expense_dict.get((year, month, "消耗品費・その他諸経費"), 0) / 1.1
-        臨時 = expense_dict.get((year, month, "臨時諸経費"), 0) / 1.1
         その他固定費 = expense_dict.get((year, month, "その他固定費"), 0) / 1.1
         家賃 = expense_dict.get((year, month, "家賃"), 0) / 1.1
         広告費 = expense_dict.get((year, month, "広告費"), 0) / 1.1
         融資利息 = expense_dict.get((year, month, "融資返済利息"), 0)
+        臨時 = expense_dict.get((year, month, "臨時諸経費"), 0) / 1.1
         融資元金 = expense_dict.get((year, month, "融資返済元金"), 0)
 
         総売上 = u10 + u8 + o10 + o8
         売上総利益 = 総売上 - 原価
-        営業利益 = 売上総利益 - 人件費 - 水道光熱費 - 消耗品 - 臨時 - その他固定費 - 家賃 - 広告費 - 融資利息
-        法人税額 = 営業利益 * 0.3358 if 営業利益 > 0 else 0
-        内部留保 = 営業利益 - 法人税額 - 融資元金
+        実質営業利益 = 売上総利益 - 人件費 - 水道光熱費 - 消耗品  - その他固定費 - 家賃 - 広告費 - 融資利息
+        最終営業利益 = 実質営業利益 - 臨時
+        法人税額 = 最終営業利益 * 0.3358 if 最終営業利益 > 0 else 0
+        内部留保 = 最終営業利益 - 法人税額 - 融資元金
 
-        for key, value in zip(pl_dict.keys(), [u10, u8, o10, o8, 総売上, 原価, 売上総利益, 人件費, 水道光熱費, 消耗品, 臨時,
-                                               その他固定費, 家賃, 広告費, 融資利息, 営業利益,
+        for key, value in zip(pl_dict.keys(), [u10, u8, o10, o8, 総売上, 原価, 売上総利益, 人件費, 水道光熱費, 消耗品,
+                                               その他固定費, 家賃, 広告費, 融資利息, 実質営業利益, 臨時, 最終営業利益,
                                                 法人税額, 融資元金, 内部留保]):
             pl_dict[key][ym] = value
 
@@ -122,12 +123,13 @@ def show_dashboard_excluding_tax():
         pl_dict["人件費"][ym] = 人件費
         pl_dict["水道光熱費"][ym] = 水道光熱費
         pl_dict["消耗品費・その他諸経費"][ym] = 消耗品
-        pl_dict["臨時諸経費"][ym] = 臨時
         pl_dict["その他固定費"][ym] = その他固定費
         pl_dict["家賃"][ym] = 家賃
         pl_dict["広告費"][ym] = 広告費
         pl_dict["融資返済利息"][ym] = 融資利息
-        pl_dict["営業利益"][ym] = 営業利益
+        pl_dict["実質営業利益"][ym] = 実質営業利益
+        pl_dict["臨時諸経費"][ym] = 臨時
+        pl_dict["最終営業利益"][ym] = 最終営業利益
         pl_dict["法人税額"][ym] = 法人税額
         pl_dict["融資返済元金"][ym] = 融資元金
         pl_dict["内部留保"][ym] = 内部留保
@@ -139,8 +141,8 @@ def show_dashboard_excluding_tax():
     df = df[["合計"] + months]
 
     # 合計値を再計算して上書きする
-    df.at["法人税額", "合計"] = df.at["営業利益", "合計"] * 0.3358 if df.at["営業利益", "合計"] > 0 else 70000
-    df.at["内部留保", "合計"] = df.at["営業利益", "合計"] - df.at["法人税額", "合計"] - df.at["融資返済元金", "合計"]
+    df.at["法人税額", "合計"] = df.at["最終営業利益", "合計"] * 0.3358 if df.at["最終営業利益", "合計"] > 0 else 70000
+    df.at["内部留保", "合計"] = df.at["最終営業利益", "合計"] - df.at["法人税額", "合計"] - df.at["融資返済元金", "合計"]
 
     # --- 比率行挿入 ---
     def pct_row(numerator_row):
@@ -165,7 +167,8 @@ def show_dashboard_excluding_tax():
     df = insert_after(df, "その他固定費", "その他固定費率", pct_row(df.loc["その他固定費"]))
     df = insert_after(df, "家賃", "家賃率", pct_row(df.loc["家賃"]))
     df = insert_after(df, "家賃率", "FLR比率", pct_row(df.loc["原価"] + df.loc["人件費"]+ df.loc["家賃"]))
-    df = insert_after(df, "営業利益", "営業利益率", pct_row(df.loc["営業利益"]))
+    df = insert_after(df, "実質営業利益", "実質営業利益率", pct_row(df.loc["実質営業利益"]))
+    df = insert_after(df, "最終営業利益", "最終営業利益率", pct_row(df.loc["最終営業利益"]))
 
     # --- 表示用変換 ---
     def format_val(val, row_label):
@@ -199,7 +202,7 @@ def show_dashboard_excluding_tax():
         "その他固定費率": target["other_fixed_rate"],
         "家賃率": target["rent_rate"],
         "FLR比率": target["flr_rate"],
-        "営業利益率": target["op_profit_rate"]
+        "実質営業利益率": target["first_op_profit_rate"]
     }
 
     # --- 表示 ---
