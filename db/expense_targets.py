@@ -36,7 +36,7 @@ def upsert_expense_target(payload: dict):
         "other_fixed_rate": float,
         "rent_rate": float,
         "flr_rate": float,
-        "op_profit_rate": float
+        "first_op_profit_rate": float
     }
     """
     try:
