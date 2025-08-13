@@ -138,6 +138,10 @@ def show_dashboard_excluding_tax():
     df["合計"] = df.sum(axis=1)
     df = df[["合計"] + months]
 
+    # 合計値を再計算して上書きする
+    df.at["法人税額", "合計"] = df.at["営業利益", "合計"] * 0.3358 if df.at["営業利益", "合計"] > 0 else 70000
+    df.at["内部留保", "合計"] = df.at["営業利益", "合計"] - df.at["法人税額", "合計"] - df.at["融資返済元金", "合計"]
+
     # --- 比率行挿入 ---
     def pct_row(numerator_row):
         return {
