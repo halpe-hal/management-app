@@ -56,7 +56,7 @@ def handle_expense_targets_setting():
                         <tr><td>その他固定費率</td><td>{data.get("other_fixed_rate", 0)}</td></tr>
                         <tr><td>家賃率</td><td>{data.get("rent_rate", 0)}</td></tr>
                         <tr><td>FLR率</td><td>{data.get("flr_rate", 0)}</td></tr>
-                        <tr><td>営業利益率</td><td>{data.get("op_profit_rate", 0)}</td></tr>
+                        <tr><td>実質営業利益率</td><td>{data.get("first_op_profit_rate", 0)}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
                 else:
