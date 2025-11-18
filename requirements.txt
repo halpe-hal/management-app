@@ -2,6 +2,7 @@ streamlit==1.44.1
 pandas==2.2.3
 numpy==1.26.4
 plotly==6.0.1
+python-dateutil
 python-dotenv==1.1.0
 python-decouple==3.8
 requests==2.32.3
@@ -20,3 +21,6 @@ storage3==0.11.3
 # Streamlit extras
 extra-streamlit-components==0.1.80
 validators==0.35.0
+
+# Supabase Auth + localStorage連携
+streamlit-javascript
