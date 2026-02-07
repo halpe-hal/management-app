@@ -173,13 +173,13 @@ def show_dashboard():
         return pd.concat([upper, insert, lower])
 
     df = insert_after(df, "原価", "原価率", pct_row(df.loc["原価"]))
-    df = insert_after(df, "人件費", "人件費率", pct_row(df.loc["人件費"]) + df.loc(["源泉税・地方税・社会保険料"]))
-    df = insert_after(df, "人件費率", "FL比率", pct_row(df.loc["原価"] + df.loc["人件費"]) + df.loc(["源泉税・地方税・社会保険料"]))
+    df = insert_after(df, "人件費", "人件費率", pct_row(df.loc["人件費"]) + df.loc["源泉税・地方税・社会保険料"])
+    df = insert_after(df, "人件費率", "FL比率", pct_row(df.loc["原価"] + df.loc["人件費"]) + df.loc["源泉税・地方税・社会保険料"])
     df = insert_after(df, "水道光熱費", "水道光熱費率", pct_row(df.loc["水道光熱費"]))
     df = insert_after(df, "消耗品費・その他諸経費", "消耗品・その他諸経費率", pct_row(df.loc["消耗品費・その他諸経費"]))
     df = insert_after(df, "その他固定費", "その他固定費率", pct_row(df.loc["その他固定費"]))
     df = insert_after(df, "家賃", "家賃率", pct_row(df.loc["家賃"]))
-    df = insert_after(df, "家賃率", "FLR比率", pct_row(df.loc["原価"] + df.loc["人件費"] + df.loc(["源泉税・地方税・社会保険料"]) + df.loc["家賃"]))
+    df = insert_after(df, "家賃率", "FLR比率", pct_row(df.loc["原価"] + df.loc["人件費"] + df.loc["源泉税・地方税・社会保険料"] + df.loc["家賃"]))
     df = insert_after(df, "実質営業利益", "実質営業利益率", pct_row(df.loc["実質営業利益"]))
     df = insert_after(df, "最終営業利益", "最終営業利益率", pct_row(df.loc["最終営業利益"]))
 
