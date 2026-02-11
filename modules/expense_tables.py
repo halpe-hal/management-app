@@ -5,10 +5,10 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 from db.account_items import get_account_items
 from db.all_expense import get_expenses, add_expense, delete_expense, update_expense_totals_by_category
+from db.all_expense_depreciation import get_expenses_depreciation, add_expense_depreciation, delete_expense_depreciation, update_expense_totals_depreciation_by_category
 from db.default_partners import get_default_partners_by_category
 from db.supabase_client import supabase
 from db.expense_categories import get_expense_categories
-
 
 # ✅ すべての費目カテゴリを対象に表示
 
@@ -113,17 +113,30 @@ def show_single_expense_table(year: int, month: int, second_category: str, top_c
                         row["勘定項目"] != "選択してください" and
                         row["支払方法"] != "選択してください"
                     ):
-                        success = add_expense(
+                        success_expense = add_expense(
                             year, month,
                             row["取引先"], row["勘定項目"], row["詳細"], row["支払方法"], row["金額"], second_category, top_category
                         )
+
+                        success_depreciation = add_expense_depreciation(
+                            year, month,
+                            row["取引先"], row["勘定項目"], row["詳細"], row["支払方法"], row["金額"], second_category, top_category
+                        )
+                        success = success_expense and success_depreciation
                         if success:
                             inserted += 1
                 if inserted:
                     update_expense_totals_by_category(year, month, second_category, top_category)
+                    update_expense_totals_depreciation_by_category(year, month, second_category, top_category)
                     st.success(f"{inserted} 件を登録しました")
                     st.session_state.pop(data_key, None)
                     st.rerun()
+                elif success_expense and not success_depreciation:
+                    st.error("減価償却テーブルへの登録に失敗しました")
+                elif not success_expense and success_depreciation:
+                    st.error("出金テーブルへの登録に失敗しました（不整合の可能性あり）")
+                elif not success_expense and not success_depreciation:
+                    st.error("両方の登録に失敗しました")
                 else:
                     st.warning("登録対象がありません")
 
@@ -133,8 +146,13 @@ def show_single_expense_table(year: int, month: int, second_category: str, top_c
                 deleted = 0
                 for _, row in updated_df.iterrows():
                     if row["操作"] == "削除" and not pd.isna(row.get("id")):
-                        delete_expense(int(row["id"]))
-                        deleted += 1
+                        ok1 = delete_expense(int(row["id"]))
+                        ok2 = delete_expense_depreciation(int(row["id"]))
+
+                        if ok1 and ok2:
+                            deleted += 1
+                        else:
+                            st.error(f"id={int(row['id'])} の削除が失敗しました（expense={ok1}, depreciation={ok2}）")
                     elif row["操作"] != "削除" and not pd.isna(row.get("id")):
                         old = existing_df[existing_df["id"] == row["id"]]
                         if not old.empty:
@@ -146,17 +164,31 @@ def show_single_expense_table(year: int, month: int, second_category: str, top_c
                                 row["支払方法"] != ex["支払方法"],
                                 row["金額"] != ex["金額"]
                             ]):
-                                supabase.table("all_expense").update({
+                                r1 = supabase.table("all_expense").update({
                                     "partner": row["取引先"],
                                     "account": row["勘定項目"],
                                     "detail": row["詳細"],
                                     "payment": row["支払方法"],
                                     "cost": row["金額"]
                                 }).eq("id", int(row["id"])).execute()
-                                updated += 1
+                                r2 = supabase.table("all_expense_depreciation").update({
+                                    "partner": row["取引先"],
+                                    "account": row["勘定項目"],
+                                    "detail": row["詳細"],
+                                    "payment": row["支払方法"],
+                                    "cost": row["金額"]
+                                }).eq("id", int(row["id"])).execute()
+                                ok1 = bool(getattr(r1, "data", None))
+                                ok2 = bool(getattr(r2, "data", None))
+
+                                if ok1 and ok2:
+                                    updated += 1
+                                else:
+                                    st.error(f"id={int(row['id'])} の更新が失敗しました（expense={ok1}, depreciation={ok2}）")
 
                 if deleted or updated:
                     update_expense_totals_by_category(year, month, second_category, top_category)
+                    update_expense_totals_depreciation_by_category(year, month, second_category, top_category)
                     if deleted: st.success(f"{deleted} 件を削除しました")
                     if updated: st.success(f"{updated} 件を更新しました")
                     st.session_state.pop(data_key, None)
