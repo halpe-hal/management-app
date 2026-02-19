@@ -105,40 +105,62 @@ def show_single_expense_table(year: int, month: int, second_category: str, top_c
         col3a, col3b = st.columns(2)
         with col3a:
             if st.button("登録", key=f"register_{key_prefix}"):
-                inserted = 0
+
+                # --- 登録対象抽出 ---
+                targets = []
                 for _, row in updated_df.iterrows():
                     if (
                         pd.isna(row.get("id")) and
-                        row["取引先"] and
-                        row["勘定項目"] != "選択してください" and
-                        row["支払方法"] != "選択してください"
+                        str(row.get("取引先") or "").strip() and
+                        row.get("勘定項目") != "選択してください" and
+                        row.get("支払方法") != "選択してください"
                     ):
-                        success_expense = add_expense(
+                        targets.append(row)
+
+                # --- 登録対象なし（ここで止めない！） ---
+                if not targets:
+                    st.warning("登録対象がありません")
+                else:
+                    inserted = 0
+                    failed_expense = 0
+                    failed_depreciation = 0
+
+                    for row in targets:
+                        ok_expense = add_expense(
                             year, month,
-                            row["取引先"], row["勘定項目"], row["詳細"], row["支払方法"], row["金額"], second_category, top_category
+                            row["取引先"], row["勘定項目"], row["詳細"],
+                            row["支払方法"], row["金額"],
+                            second_category, top_category
                         )
 
-                        success_depreciation = add_expense_depreciation(
+                        ok_depreciation = add_expense_depreciation(
                             year, month,
-                            row["取引先"], row["勘定項目"], row["詳細"], row["支払方法"], row["金額"], second_category, top_category
+                            row["取引先"], row["勘定項目"], row["詳細"],
+                            row["支払方法"], row["金額"],
+                            second_category, top_category
                         )
-                        success = success_expense and success_depreciation
-                        if success:
+
+                        if ok_expense and ok_depreciation:
                             inserted += 1
-                if inserted:
-                    update_expense_totals_by_category(year, month, second_category, top_category)
-                    update_expense_totals_depreciation_by_category(year, month, second_category, top_category)
-                    st.success(f"{inserted} 件を登録しました")
-                    st.session_state.pop(data_key, None)
-                    st.rerun()
-                elif success_expense and not success_depreciation:
-                    st.error("減価償却テーブルへの登録に失敗しました")
-                elif not success_expense and success_depreciation:
-                    st.error("出金テーブルへの登録に失敗しました（不整合の可能性あり）")
-                elif not success_expense and not success_depreciation:
-                    st.error("両方の登録に失敗しました")
-                else:
-                    st.warning("登録対象がありません")
+                        else:
+                            if not ok_expense:
+                                failed_expense += 1
+                            if not ok_depreciation:
+                                failed_depreciation += 1
+
+                    if inserted > 0:
+                        update_expense_totals_by_category(year, month, second_category, top_category)
+                        update_expense_totals_depreciation_by_category(year, month, second_category, top_category)
+                        st.success(f"{inserted} 件を登録しました")
+                        st.session_state.pop(data_key, None)
+                        st.rerun()
+                    else:
+                        if failed_expense > 0 and failed_depreciation == 0:
+                            st.error("出金テーブルへの登録に失敗しました")
+                        elif failed_expense == 0 and failed_depreciation > 0:
+                            st.error("減価償却テーブルへの登録に失敗しました")
+                        else:
+                            st.error("両方の登録に失敗しました")
 
         with col3b:
             if st.button("更新", key=f"update_{key_prefix}"):
