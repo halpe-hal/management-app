@@ -8,6 +8,7 @@ from db.all_expense_total import get_expense_totals
 from modules.expense_tables import show_expense_tables_by_select
 from db.fixed_categories import apply_fixed_expenses
 from db.all_expense import update_expense_totals_by_category
+from db.all_expense_depreciation import update_expense_totals_depreciation_by_category
 from db.divisions import get_divisions
 from db.expense_categories import get_fixed_expense_categories, get_variable_expense_categories
 from modules.sales_tables import show_all_sales_tables
@@ -105,10 +106,11 @@ def handle_all_expense(year: int, month: int, top_category: str):
 
     # 固定費手動反映ボタン
     if st.button("この月に固定費を反映する", key=f"apply_fixed_{year}_{month}_{top_category}"):
-        success = apply_fixed_expenses(year, month, top_category)
+        success, failed_expense, failed_depreciation = apply_fixed_expenses(year, month, top_category)
         if success:
             for second_category in fixed_categories:
                 update_expense_totals_by_category(year, month, second_category, top_category)
+                update_expense_totals_depreciation_by_category(year, month, second_category, top_category)
 
                 # 👇 表示キャッシュを破棄（AgGridを再表示させる）
                 key_prefix = second_category.replace(" ", "_").replace("(", "").replace(")", "")
@@ -118,7 +120,14 @@ def handle_all_expense(year: int, month: int, top_category: str):
             st.success("固定費を反映しました。")
             st.rerun()
         else:
-            st.error("固定費の反映に失敗しました。")
+            if failed_expense > 0 and failed_depreciation == 0:
+                st.error("出金テーブルへの登録に失敗しました")
+            elif failed_expense == 0 and failed_depreciation > 0:
+                st.error("減価償却テーブルへの登録に失敗しました")
+            elif failed_expense > 0 and failed_depreciation > 0:
+                st.error("両方の登録に失敗しました")
+            else:
+                st.error("固定費の反映処理で例外が発生しました")
 
     # 月末日なら自動反映
     today = date.today()
