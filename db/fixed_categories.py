@@ -23,6 +23,7 @@ def apply_fixed_expenses(year: int, month: int, selected_top_category: str) -> b
     all_expense テーブルに、second_category（家賃・その他固定費・融資返済）として保存する。
     """
     from db.all_expense import get_expenses  # 循環import防止
+    from db.all_expense_depreciation import get_expenses_depreciation  # 循環import防止
 
     try:
         fixed_items = get_fixed_categories()
@@ -34,10 +35,16 @@ def apply_fixed_expenses(year: int, month: int, selected_top_category: str) -> b
             for e in existing
         )
 
+        existing_dep = get_expenses_depreciation(year, month, selected_top_category)
+        existing_dep_set = set(
+            (e["partner"], e["account"], e["detail"], float(e["cost"]))
+            for e in existing_dep
+        )
+
         new_rows = []
         for row in filtered:
             key = (row["partner"], row["account"], row["detail"], float(row["cost"]))
-            if key not in existing_set:
+            if key not in existing_set and key not in existing_dep_set:
                 new_rows.append({
                     "year": year,
                     "month": month,
@@ -51,13 +58,28 @@ def apply_fixed_expenses(year: int, month: int, selected_top_category: str) -> b
                     "updated_at": datetime.now().isoformat()
                 })
 
-        if new_rows:
-            supabase.table("all_expense").insert(new_rows).execute()
+        if not new_rows:
+            return True, 0, 0  # 追加対象なし
 
-        return True
+        failed_expense = 0
+        failed_depreciation = 0
+
+        # --- all_expense ---
+        r1 = supabase.table("all_expense").insert(new_rows).execute()
+        if not getattr(r1, "data", None):
+            failed_expense = len(new_rows)
+
+        # --- all_expense_depreciation ---
+        r2 = supabase.table("all_expense_depreciation").insert(new_rows).execute()
+        if not getattr(r2, "data", None):
+            failed_depreciation = len(new_rows)
+
+        success = failed_expense == 0 and failed_depreciation == 0
+        return success, failed_expense, failed_depreciation
+
     except Exception as e:
         logging.error(f"apply_fixed_expenses error: {e}")
-        return False
+        return False, -1, -1
 
 
 
