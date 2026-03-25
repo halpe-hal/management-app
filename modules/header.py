@@ -187,13 +187,23 @@ def render_pl_table(df: pd.DataFrame, targets: dict = {}):
             val = row[col]
             style = ""
 
-            # 🔴 比率が目標超過
+            # 🔴 比率が目標未達 または 超過で赤文字
             if row_label in targets and isinstance(val, str) and "%" in val:
                 try:
-                    pct_val = float(val.replace("%", "").replace(",", ""))
+                    # 改行タグを取り除き、実績の%部分だけを抽出
+                    base_val = val.split("<br>")[0] 
+                    pct_val = float(base_val.replace("%", "").replace(",", ""))
+                    
                     threshold = targets[row_label]
-                    if threshold > 0 and pct_val > threshold:
-                        style = ' style="color:red;"'
+                    if threshold > 0:
+                        # 利益率（実質営業利益率など）は、目標を下回った場合に赤字
+                        if "利益率" in row_label:
+                            if pct_val < threshold:
+                                style = ' style="color:red;"'
+                        # それ以外のコスト（原価率など）は、目標を上回った場合に赤字
+                        else:
+                            if pct_val > threshold:
+                                style = ' style="color:red;"'
                 except:
                     pass
 
