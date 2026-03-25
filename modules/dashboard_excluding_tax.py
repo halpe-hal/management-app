@@ -194,20 +194,51 @@ def show_dashboard_excluding_tax():
         for col in df_display.columns[1:]:
             df_display.at[i, col] = format_val(row[col], row_label)
 
-    # --- 目標比率取得（※「Lia全体合計」では空に）
-
+    # --- 目標比率取得（※未設定や「事業本部」の場合は空にするエラー回避） ---
     target = get_expense_target_by_top_category(selected_div)
-    targets = {
-        "原価率": target["cost_rate"],
-        "人件費率": target["labor_rate"],
-        "FL比率": target["fl_rate"],
-        "水道光熱費率": target["utility_rate"],
-        "消耗品・その他諸経費率": target["misc_rate"],
-        "その他固定費率": target["other_fixed_rate"],
-        "家賃率": target["rent_rate"],
-        "FLR比率": target["flr_rate"],
-        "実質営業利益率": target["first_op_profit_rate"]
-    }
+    if target:
+        targets = {
+            "原価率": target.get("cost_rate", 0),
+            "人件費率": target.get("labor_rate", 0),
+            "FL比率": target.get("fl_rate", 0),
+            "水道光熱費率": target.get("utility_rate", 0),
+            "消耗品・その他諸経費率": target.get("misc_rate", 0),
+            "その他固定費率": target.get("other_fixed_rate", 0),
+            "家賃率": target.get("rent_rate", 0),
+            "FLR比率": target.get("flr_rate", 0),
+            "実質営業利益率": target.get("first_op_profit_rate", 0)
+        }
+    else:
+        targets = {}
+
+    # --- 表示用変換 ---
+    def format_val(val, row_label):
+        try:
+            if isinstance(val, (int, float)):
+                if "率" in str(row_label) and "税率" not in str(row_label):
+                    actual_pct = val * 100
+                    base_str = f"{actual_pct:.1f}%"
+                    
+                    # 目標比率との差分を計算して追加（HTMLの改行を使用）
+                    if row_label in targets and targets[row_label] > 0:
+                        diff = actual_pct - targets[row_label]
+                        sign = "+" if diff > 0 else ""
+                        return f"{base_str}<br><span style='font-size: 0.85em; color: gray;'>({sign}{diff:.1f}%)</span>"
+                    
+                    return base_str
+                return f"¥{val:,.0f}"
+        except:
+            pass
+        return val
+
+    df_display = df.copy()
+    df_display["項目"] = df_display.index
+    df_display = df_display[["項目", "合計"] + months]
+
+    for i, row in df_display.iterrows():
+        row_label = row["項目"]
+        for col in df_display.columns[1:]:
+            df_display.at[i, col] = format_val(row[col], row_label)
 
     # --- 表示 ---
     st.markdown("### 月別PL")
