@@ -51,7 +51,7 @@ def show_dashboard_excluding_tax():
     selected_div = st.selectbox("事業部を選択", divisions)
 
     # --- データ取得 ---
-    if selected_div == "事業本部":
+    if selected_div == "Lia全体合計":
         sales_data = get_sales_totals_all(years)
         expense_data = get_expense_totals_all(years)
 
@@ -194,7 +194,7 @@ def show_dashboard_excluding_tax():
         for col in df_display.columns[1:]:
             df_display.at[i, col] = format_val(row[col], row_label)
 
-    # --- 目標比率取得（※「事業本部」では空に）
+    # --- 目標比率取得（※「Lia全体合計」では空に）
 
     target = get_expense_target_by_top_category(selected_div)
     targets = {
