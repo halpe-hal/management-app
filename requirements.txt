@@ -1,0 +1,28 @@
+#requirements.txt
+
+streamlit==1.44.1
+pandas==2.2.3
+numpy==1.26.4
+plotly==6.0.1
+python-dateutil
+python-dotenv==1.1.0
+python-decouple==3.8
+requests==2.32.3
+openpyxl==3.1.5
+jpholiday==1.0.1
+streamlit-aggrid==1.0.5
+streamlit-autorefresh==1.0.1
+
+# Supabase
+supabase==2.15.0
+gotrue==2.12.0
+postgrest==1.0.1
+realtime==2.4.2
+storage3==0.11.3
+
+# Streamlit extras
+extra-streamlit-components==0.1.80
+validators==0.35.0
+
+# Supabase Auth + localStorage連携
+streamlit-javascript
