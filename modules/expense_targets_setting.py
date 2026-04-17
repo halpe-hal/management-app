@@ -2,6 +2,7 @@
 
 import streamlit as st
 from db.divisions import get_divisions
+from db.brands import get_brands
 from db.expense_targets import get_expense_target_by_top_category, upsert_expense_target
 from datetime import datetime
 
@@ -9,15 +10,32 @@ def handle_expense_targets_setting():
     st.markdown("## 目標比率の設定")
 
     divisions = get_divisions()
-    if not divisions:
-        st.warning("事業部が未登録です。先に『事業部設定』から登録してください。")
+    brands = get_brands()
+
+    if not divisions and not brands:
+        st.warning("事業部・ブランドが未登録です。先に登録してください。")
         return
 
-    tabs = st.tabs(divisions)
+    # 仮想集計エントリ
+    virtual_entries = ["Lia全体合計"]
+    store_divs = [d for d in divisions if "[店舗]" in d]
+    if store_divs:
+        virtual_entries.append("店舗合計")
+    brand_entries = [f"{b}合計" for b in brands]
 
-    for i, div in enumerate(divisions):
+    all_entries = divisions + virtual_entries + brand_entries
+
+    tabs = st.tabs(all_entries)
+
+    for i, div in enumerate(all_entries):
         with tabs[i]:
-            st.markdown(f"### 【{div}】の目標比率")
+            if div in virtual_entries:
+                label = f"{div}（仮想合計）"
+            elif div in brand_entries:
+                label = f"{div}（ブランド合計）"
+            else:
+                label = div
+            st.markdown(f"### 【{label}】の目標比率")
 
             data = get_expense_target_by_top_category(div)
             editing_key = f"{div}_editing"
