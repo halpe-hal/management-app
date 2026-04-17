@@ -62,8 +62,8 @@ def show_dashboard():
         virtual_entries.append("店舗合計")
 
     for brand in brands:
-        brand_divs = [d for d in divisions if brand in d]
-        if brand_divs:
+        brand_store_divs = [d for d in divisions if brand in d and "[店舗]" in d]
+        if len(brand_store_divs) >= 2:
             virtual_entries.append(f"{brand}合計")
 
     # DB に「Lia全体合計」が残っていても重複しないよう除外してセレクタ構築
