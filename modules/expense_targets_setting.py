@@ -33,7 +33,7 @@ def handle_expense_targets_setting():
         if len(divs) >= 2:
             virtual_entries.append(f"{b}合計")
 
-    all_entries = divisions + virtual_entries
+    all_entries = virtual_entries + divisions
 
     tabs = st.tabs(all_entries)
 
