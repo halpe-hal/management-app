@@ -8,8 +8,7 @@ from db.all_sales_total import get_sales_totals_all
 from db.all_expense_total import get_expense_totals_all
 from db.expense_targets import get_expense_target_by_top_category
 from db.expense_categories import get_expense_categories
-from db.divisions import get_divisions
-from db.brands import get_brands
+from db.divisions import get_divisions, get_division_records
 
 # --- 期間オプションから日付範囲を返す ---
 def get_filtered_period(option: str):
@@ -45,8 +44,8 @@ def show_graph_analysis():
     start_date, end_date = get_filtered_period(period_option)
 
     # データ取得
-    divisions = get_divisions()
-    brands = get_brands()
+    division_records = get_division_records()
+    divisions = [r["name"] for r in division_records]
     sales_data = get_sales_totals_all(list(range(start_date.year - 1, end_date.year + 1)))
     expense_data = get_expense_totals_all(list(range(start_date.year - 1, end_date.year + 1)))
 
@@ -61,30 +60,35 @@ def show_graph_analysis():
     df_sales["年月"] = df_sales["year"].astype(str) + " / " + df_sales["month"].astype(str).str.zfill(2)
     df_expense["年月"] = df_expense["year"].astype(str) + " / " + df_expense["month"].astype(str).str.zfill(2)
 
-    # 仮想合計エントリ（ダッシュボードと同じルール）
-    virtual_entries = ["Lia全体合計"]
-    store_divs = [d for d in divisions if "[店舗]" in d]
-    if store_divs:
-        virtual_entries.append("店舗合計")
-    brand_entries = []
-    for brand in brands:
-        brand_store_divs = [d for d in divisions if brand in d and "[店舗]" in d]
-        if len(brand_store_divs) >= 2:
-            brand_entries.append(f"{brand}合計")
+    # 業態・ブランドのグループを構築
+    type_groups = {}
+    brand_groups = {}
+    for rec in division_records:
+        if rec.get("type"):
+            type_groups.setdefault(rec["type"], []).append(rec["name"])
+        if rec.get("brand"):
+            brand_groups.setdefault(rec["brand"], []).append(rec["name"])
 
-    all_entries = virtual_entries + brand_entries + divisions
+    # 仮想合計エントリと集計マッピングを同時に構築
+    non_honbu_divs = [d for d in divisions if d != "事業本部"]
+    virtual_entries = ["Lia全体合計", "全事業部合計（事業本部除く）"]
+    virtual_div_map = {
+        "Lia全体合計": divisions,
+        "全事業部合計（事業本部除く）": non_honbu_divs,
+    }
+    for t, divs in type_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{t}合計")
+            virtual_div_map[f"{t}合計"] = divs
+    for b, divs in brand_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{b}合計")
+            virtual_div_map[f"{b}合計"] = divs
 
-    # エントリ名 → 集計対象の top_category リストを返すヘルパー
+    all_entries = virtual_entries + divisions
+
     def get_target_divisions(entry_name):
-        if entry_name == "Lia全体合計":
-            return divisions
-        elif entry_name == "店舗合計":
-            return [d for d in divisions if "[店舗]" in d]
-        elif entry_name in brand_entries:
-            brand = entry_name.removesuffix("合計")
-            return [d for d in divisions if brand in d and "[店舗]" in d]
-        else:
-            return [entry_name]
+        return virtual_div_map.get(entry_name, [entry_name])
 
     tabs = st.tabs(all_entries)
 

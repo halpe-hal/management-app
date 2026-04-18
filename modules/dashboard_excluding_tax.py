@@ -7,8 +7,7 @@ from collections import defaultdict
 from db.all_sales_total import get_sales_totals_batch, get_sales_totals_all
 from db.all_expense_total import get_expense_totals_batch, get_expense_totals_all
 from db.expense_targets import get_expense_target_by_top_category
-from db.divisions import get_divisions
-from db.brands import get_brands
+from db.divisions import get_divisions, get_division_records
 from modules.header import render_pl_table
 
 # 年度生成
@@ -48,20 +47,30 @@ def show_dashboard_excluding_tax():
     months = get_months_in_term(selected_term)
     years = sorted(set(int(m.split("-")[0]) for m in months))
 
-    divisions = get_divisions()
-    brands = get_brands()
+    division_records = get_division_records()
+    divisions = [r["name"] for r in division_records]
 
-    # --- 仮想集計エントリを動的生成 ---
-    virtual_entries = ["Lia全体合計"]
+    # 業態・ブランドのグループを構築
+    type_groups = {}
+    brand_groups = {}
+    for rec in division_records:
+        if rec.get("type"):
+            type_groups.setdefault(rec["type"], []).append(rec["name"])
+        if rec.get("brand"):
+            brand_groups.setdefault(rec["brand"], []).append(rec["name"])
 
-    store_divs = [d for d in divisions if "[店舗]" in d]
-    if store_divs:
-        virtual_entries.append("店舗合計")
-
-    for brand in brands:
-        brand_store_divs = [d for d in divisions if brand in d and "[店舗]" in d]
-        if len(brand_store_divs) >= 2:
-            virtual_entries.append(f"{brand}合計")
+    # --- 仮想集計エントリと集計マッピングを同時に構築 ---
+    non_honbu_divs = [d for d in divisions if d != "事業本部"]
+    virtual_entries = ["Lia全体合計", "全事業部合計（事業本部除く）"]
+    virtual_div_map = {"全事業部合計（事業本部除く）": non_honbu_divs}
+    for t, divs in type_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{t}合計")
+            virtual_div_map[f"{t}合計"] = divs
+    for b, divs in brand_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{b}合計")
+            virtual_div_map[f"{b}合計"] = divs
 
     real_divisions = [d for d in divisions if d != "Lia全体合計"]
     divisions_for_select = virtual_entries + real_divisions
@@ -98,15 +107,8 @@ def show_dashboard_excluding_tax():
         sales_dict = dict(sales_agg)
         expense_dict = dict(expense_agg)
 
-    elif selected_div == "店舗合計":
-        target_divs = [d for d in divisions if "[店舗]" in d]
-        sales_dict, expense_dict = aggregate_multi_divisions(target_divs)
-
-    elif selected_div.endswith("合計"):
-        # 〇〇合計 → ブランド名を含む全事業部を集計
-        brand_name = selected_div[:-2]
-        target_divs = [d for d in divisions if brand_name in d]
-        sales_dict, expense_dict = aggregate_multi_divisions(target_divs)
+    elif selected_div in virtual_div_map:
+        sales_dict, expense_dict = aggregate_multi_divisions(virtual_div_map[selected_div])
 
     else:
         sales_data = get_sales_totals_batch(years, selected_div)

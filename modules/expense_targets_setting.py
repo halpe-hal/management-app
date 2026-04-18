@@ -1,38 +1,48 @@
 # modules/expense_targets_setting.py
 
 import streamlit as st
-from db.divisions import get_divisions
-from db.brands import get_brands
+from db.divisions import get_divisions, get_division_records
 from db.expense_targets import get_expense_target_by_top_category, upsert_expense_target
 from datetime import datetime
 
 def handle_expense_targets_setting():
     st.markdown("## 目標比率の設定")
 
-    divisions = get_divisions()
-    brands = get_brands()
+    division_records = get_division_records()
+    divisions = [r["name"] for r in division_records]
 
-    if not divisions and not brands:
-        st.warning("事業部・ブランドが未登録です。先に登録してください。")
+    if not divisions:
+        st.warning("事業部が未登録です。先に登録してください。")
         return
 
-    # 仮想集計エントリ
-    virtual_entries = ["Lia全体合計"]
-    store_divs = [d for d in divisions if "[店舗]" in d]
-    if store_divs:
-        virtual_entries.append("店舗合計")
-    brand_entries = [f"{b}合計" for b in brands]
+    # 業態・ブランドのグループを構築
+    type_groups = {}
+    brand_groups = {}
+    for rec in division_records:
+        if rec.get("type"):
+            type_groups.setdefault(rec["type"], []).append(rec["name"])
+        if rec.get("brand"):
+            brand_groups.setdefault(rec["brand"], []).append(rec["name"])
 
-    all_entries = divisions + virtual_entries + brand_entries
+    # 仮想集計エントリ
+    virtual_entries = ["Lia全体合計", "全事業部合計（事業本部除く）"]
+    for t, divs in type_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{t}合計")
+    for b, divs in brand_groups.items():
+        if len(divs) >= 2:
+            virtual_entries.append(f"{b}合計")
+
+    all_entries = divisions + virtual_entries
 
     tabs = st.tabs(all_entries)
 
     for i, div in enumerate(all_entries):
         with tabs[i]:
-            if div in virtual_entries:
-                label = f"{div}（仮想合計）"
-            elif div in brand_entries:
-                label = f"{div}（ブランド合計）"
+            if div == "Lia全体合計":
+                label = div
+            elif div in virtual_entries:
+                label = f"{div}（合計）"
             else:
                 label = div
             st.markdown(f"### 【{label}】の目標比率")

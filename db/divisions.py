@@ -12,7 +12,7 @@ def get_divisions():
         logging.error(f"get_divisions error: {e}")
         return []
 
-def add_division(name: str) -> str:
+def add_division(name: str, division_type: str = None, brand: str = None) -> str:
     """新規事業部を登録し、sort_orderの最大値+1を設定する"""
     try:
         existing = supabase.table("divisions").select("name").eq("name", name).execute()
@@ -22,7 +22,12 @@ def add_division(name: str) -> str:
         current = supabase.table("divisions").select("sort_order").order("sort_order", desc=True).limit(1).execute()
         max_order = current.data[0]["sort_order"] + 1 if current.data and current.data[0].get("sort_order") is not None else 0
 
-        supabase.table("divisions").insert({"name": name, "sort_order": max_order}).execute()
+        payload = {"name": name, "sort_order": max_order}
+        if division_type:
+            payload["type"] = division_type
+        if brand:
+            payload["brand"] = brand
+        supabase.table("divisions").insert(payload).execute()
         return "success"
     except Exception as e:
         logging.error(f"add_division error: {e}")
@@ -34,6 +39,22 @@ def update_division(id: int, new_name: str):
         return True
     except Exception as e:
         logging.error(f"update_division error: {e}")
+        return False
+
+def update_division_type(id: int, division_type: str) -> bool:
+    try:
+        supabase.table("divisions").update({"type": division_type}).eq("id", id).execute()
+        return True
+    except Exception as e:
+        logging.error(f"update_division_type error: {e}")
+        return False
+
+def update_division_brand(id: int, brand: str) -> bool:
+    try:
+        supabase.table("divisions").update({"brand": brand}).eq("id", id).execute()
+        return True
+    except Exception as e:
+        logging.error(f"update_division_brand error: {e}")
         return False
 
 def delete_division(id: int):
