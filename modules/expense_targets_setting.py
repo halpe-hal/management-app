@@ -84,6 +84,7 @@ def handle_expense_targets_setting():
                         <tr><td>その他固定費率</td><td>{data.get("other_fixed_rate", 0)}</td></tr>
                         <tr><td>家賃率</td><td>{data.get("rent_rate", 0)}</td></tr>
                         <tr><td>FLR率</td><td>{data.get("flr_rate", 0)}</td></tr>
+                        <tr><td>広告費率</td><td>{data.get("ad_rate", 0)}</td></tr>
                         <tr><td>実質営業利益率</td><td>{data.get("first_op_profit_rate", 0)}</td></tr>
                     </table>
                     """, unsafe_allow_html=True)
@@ -99,16 +100,17 @@ def handle_expense_targets_setting():
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    cost_rate = st.number_input("原価率", value=float(data.get("cost_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_cost")
-                    labor_rate = st.number_input("人件費率", value=float(data.get("labor_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_labor")
-                    fl_rate = st.number_input("FL率", value=float(data.get("fl_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_fl")
-                    misc_rate = st.number_input("消耗品・諸経費率", value=float(data.get("misc_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_misc")
+                    cost_rate = st.number_input("原価率", value=float(data.get("cost_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_cost")
+                    labor_rate = st.number_input("人件費率", value=float(data.get("labor_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_labor")
+                    fl_rate = st.number_input("FL率", value=float(data.get("fl_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_fl")
+                    misc_rate = st.number_input("消耗品・諸経費率", value=float(data.get("misc_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_misc")
                 with col2:
-                    utility_rate = st.number_input("水道光熱費率", value=float(data.get("utility_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_utility")
-                    other_fixed_rate = st.number_input("その他固定費率", value=float(data.get("other_fixed_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_other_fixed")
-                    rent_rate = st.number_input("家賃率", value=float(data.get("rent_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_rent")
-                    flr_rate = st.number_input("FLR率", value=float(data.get("flr_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_flr")
-                    first_op_profit_rate = st.number_input("実質営業利益率", value=float(data.get("first_op_profit_rate", 0)) if data else 0.0, step=0.1, key=f"{div}_op")
+                    utility_rate = st.number_input("水道光熱費率", value=float(data.get("utility_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_utility")
+                    other_fixed_rate = st.number_input("その他固定費率", value=float(data.get("other_fixed_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_other_fixed")
+                    rent_rate = st.number_input("家賃率", value=float(data.get("rent_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_rent")
+                    flr_rate = st.number_input("FLR率", value=float(data.get("flr_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_flr")
+                    ad_rate = st.number_input("広告費率", value=float(data.get("ad_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_ad")
+                    first_op_profit_rate = st.number_input("実質営業利益率", value=float(data.get("first_op_profit_rate") or 0) if data else 0.0, step=0.1, key=f"{div}_op")
                 if st.button("保存", key=f"save_btn_{div}"):
                     payload = {
                         "top_category": div,
@@ -120,6 +122,7 @@ def handle_expense_targets_setting():
                         "other_fixed_rate": other_fixed_rate,
                         "rent_rate": rent_rate,
                         "flr_rate": flr_rate,
+                        "ad_rate": ad_rate,
                         "first_op_profit_rate": first_op_profit_rate
                     }
                     success = upsert_expense_target(payload)

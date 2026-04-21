@@ -225,6 +225,7 @@ def show_dashboard():
     df = insert_after(df, "その他固定費", "その他固定費率", pct_row(df.loc["その他固定費"]))
     df = insert_after(df, "家賃", "家賃率", pct_row(df.loc["家賃"]))
     df = insert_after(df, "家賃率", "FLR比率", pct_row(df.loc["原価"] + df.loc["人件費"] + df.loc["源泉税・地方税・社会保険料"] + df.loc["家賃"]))
+    df = insert_after(df, "広告費", "広告費率", pct_row(df.loc["広告費"]))
     df = insert_after(df, "実質営業利益", "実質営業利益率", pct_row(df.loc["実質営業利益"]))
     df = insert_after(df, "最終営業利益", "最終営業利益率", pct_row(df.loc["最終営業利益"]))
 
@@ -260,6 +261,7 @@ def show_dashboard():
             "その他固定費率": target.get("other_fixed_rate", 0),
             "家賃率": target.get("rent_rate", 0),
             "FLR比率": target.get("flr_rate", 0),
+            "広告費率": target.get("ad_rate", 0),
             "実質営業利益率": target.get("first_op_profit_rate", 0),
             "最終営業利益率": target.get("first_op_profit_rate", 0)
         }
