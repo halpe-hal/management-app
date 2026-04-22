@@ -70,15 +70,15 @@ def update_expense_totals_by_category(year: int, month: int, second_category: st
         res = supabase.table("all_expense").select("*")\
             .eq("year", year).eq("month", month)\
             .eq("second_category", second_category).eq("top_category", top_category).execute()
-        if not res.data:
-            return True
-        else:
-            total_cost = sum(row.get("cost", 0) for row in res.data)
-
-        # 既存データ削除
+        # 既存の合計レコードを削除（件数ゼロの場合もここで消す）
         supabase.table("all_expense_total").delete()\
             .eq("year", year).eq("month", month)\
             .eq("second_category", second_category).eq("top_category", top_category).execute()
+
+        if not res.data:
+            return True
+
+        total_cost = sum(row.get("cost", 0) for row in res.data)
 
         # 登録
         supabase.table("all_expense_total").insert({
