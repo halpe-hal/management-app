@@ -140,7 +140,7 @@ def show_dashboard_excluding_tax():
         広告費 = expense_dict.get((year, month, "広告費"), 0) / 1.1
         融資利息 = expense_dict.get((year, month, "融資返済利息"), 0)
         臨時 = expense_dict.get((year, month, "臨時諸経費"), 0) / 1.1
-        税金等 = expense_dict.get((year, month, "（非課税）保険料・税金等"), 0) / 1.1
+        税金等 = expense_dict.get((year, month, "（非課税）保険料・税金等"), 0)
         融資元金 = expense_dict.get((year, month, "融資返済元金"), 0)
         インセンティブ支給総額 = expense_dict.get((year, month, "インセンティブ支給総額"), 0)
 
